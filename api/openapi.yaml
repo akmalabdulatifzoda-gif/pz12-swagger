@@ -1,0 +1,287 @@
+openapi: 3.0.0
+info:
+  contact:
+    name: Абдулатифзода Акмал, ЭФМО-0126
+    url: https://github.com/akmalabdulatifzoda-gif/pz12-swagger
+  description: >-
+    Учебный REST API для заметок (CRUD). ПЗ №12 — Swagger/OpenAPI.
+
+    Методы POST, PATCH и DELETE требуют Bearer-токен, если сервер запущен с API_TOKEN.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Notes API
+  version: "1.0"
+paths:
+  /notes:
+    get:
+      description: Возвращает список заметок с пагинацией и фильтром по заголовку
+      operationId: listNotes
+      parameters:
+        - description: Номер страницы (с 1)
+          in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - description: Размер страницы (1–100)
+          in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - description: Поиск по title (без учёта регистра)
+          in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Total-Count:
+              description: Общее количество
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/core.Note"
+                type: array
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+      summary: Список заметок
+      tags:
+        - notes
+    post:
+      description: Создаёт новую заметку. Поле title обязательно.
+      operationId: createNote
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/core.NoteCreate"
+        description: Данные новой заметки
+        required: true
+      responses:
+        "201":
+          description: Created
+          headers:
+            Location:
+              description: URL созданной заметки
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.Note"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Создать заметку
+      tags:
+        - notes
+  "/notes/{id}":
+    delete:
+      operationId: deleteNote
+      parameters:
+        - description: ID заметки
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Удалить заметку
+      tags:
+        - notes
+    get:
+      description: Возвращает данные заметки по идентификатору
+      operationId: getNote
+      parameters:
+        - description: ID заметки
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.Note"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+      summary: Получить заметку
+      tags:
+        - notes
+    patch:
+      description: Меняет только переданные поля; updatedAt выставляется автоматически
+      operationId: patchNote
+      parameters:
+        - description: ID заметки
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/core.NoteUpdate"
+        description: Поля для обновления
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.Note"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/core.ErrorResponse"
+      security:
+        - BearerAuth: []
+      summary: Обновить заметку (частично)
+      tags:
+        - notes
+servers:
+  - url: /api/v1
+components:
+  securitySchemes:
+    BearerAuth:
+      description: "Введите токен в формате: Bearer ВАШ_ТОКЕН (для демо: Bearer secret)"
+      in: header
+      name: Authorization
+      type: apiKey
+  schemas:
+    core.ErrorResponse:
+      properties:
+        error:
+          example: описание ошибки
+          type: string
+      type: object
+    core.Note:
+      properties:
+        content:
+          example: Добавить пример структуры API
+          type: string
+        createdAt:
+          example: 2026-11-05T12:00:00Z
+          type: string
+        id:
+          example: 1
+          type: integer
+        title:
+          example: Идея для лекции
+          type: string
+        updatedAt:
+          example: 2026-11-05T12:30:00Z
+          type: string
+      type: object
+    core.NoteCreate:
+      properties:
+        content:
+          example: Текст заметки
+          type: string
+        title:
+          example: Новая заметка
+          maxLength: 200
+          minLength: 1
+          type: string
+      type: object
+    core.NoteUpdate:
+      properties:
+        content:
+          example: Новый текст
+          type: string
+        title:
+          example: Обновлено
+          maxLength: 200
+          type: string
+      type: object

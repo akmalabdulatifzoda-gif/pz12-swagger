@@ -1,0 +1,5 @@
+/notes-api
+/bin/
+*.exe
+.idea/
+.vscode/

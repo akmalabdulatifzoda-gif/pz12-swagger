@@ -1,0 +1,11 @@
+extends:
+  - recommended
+rules:
+  # Чтение заметок (GET) намеренно публичное, авторизация нужна только для изменения.
+  security-defined:
+    severity: error
+    exceptions:
+      - path: /notes
+        methods: [get]
+      - path: /notes/{id}
+        methods: [get]
